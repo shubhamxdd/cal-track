@@ -1,20 +1,23 @@
+import 'react-native-gesture-handler';
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { AppProvider, useApp } from './src/context/AppContext';
+import { AppNavigator } from './src/navigation/AppNavigator';
+
+const ThemedApp = () => {
+  const { state } = useApp();
+  return (
+    <>
+      <StatusBar style={state.settings.themeMode === 'dark' ? 'light' : 'dark'} />
+      <AppNavigator />
+    </>
+  );
+};
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <AppProvider>
+      <ThemedApp />
+    </AppProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
