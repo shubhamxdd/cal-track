@@ -67,6 +67,17 @@ export interface GeminiNutritionResponse {
   confidence: 'high' | 'medium' | 'low';
 }
 
+export interface RecentFood {
+  id: string;
+  name: string;
+  portionDescription: string;
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  loggedAt: string;
+}
+
 export interface AppSettings {
   themeMode: ThemeMode;
   onboardingCompleted: boolean;

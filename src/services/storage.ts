@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserProfile, DailyLog, FavoriteFood, AppSettings, FoodItem, MealType } from '../types';
+import { UserProfile, DailyLog, FavoriteFood, AppSettings, FoodItem, MealType, RecentFood } from '../types';
 import { getTodayDate } from '../utils/helpers';
 
 // Storage keys — centralised so swapping to a DB only means changing this file
@@ -13,17 +13,6 @@ const KEYS = {
 };
 
 // ─── Recent Foods ─────────────────────────────────────────────────────────────
-
-export interface RecentFood {
-  id: string;
-  name: string;
-  portionDescription: string;
-  calories: number;
-  proteinG: number;
-  carbsG: number;
-  fatG: number;
-  loggedAt: string;
-}
 
 const MAX_RECENT = 15;
 
@@ -130,6 +119,21 @@ export const removeFoodFromLog = async (
 ): Promise<DailyLog> => {
   const log = await getDailyLog(date);
   log[mealType] = log[mealType].filter((f) => f.id !== foodId);
+  const updated = recalculateTotals(log);
+  await saveDailyLog(updated);
+  return updated;
+};
+
+export const updateFoodInLog = async (
+  date: string,
+  foodId: string,
+  mealType: MealType,
+  updatedFood: Partial<FoodItem>
+): Promise<DailyLog> => {
+  const log = await getDailyLog(date);
+  log[mealType] = log[mealType].map((f) =>
+    f.id === foodId ? { ...f, ...updatedFood } : f
+  );
   const updated = recalculateTotals(log);
   await saveDailyLog(updated);
   return updated;

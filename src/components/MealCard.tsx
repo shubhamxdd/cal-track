@@ -76,9 +76,15 @@ export const MealCard: React.FC<MealCardProps> = ({
       )}
 
       {items.length === 0 && (
-        <Text style={[styles.emptyText, { color: theme.textMuted }]}>
-          Tap + to log your {getMealTypeLabel(mealType).toLowerCase()}
-        </Text>
+        <TouchableOpacity
+          onPress={onAddPress}
+          style={[styles.emptyContainer, { borderTopColor: theme.border }]}
+        >
+          <Text style={[styles.emptyText, { color: theme.textMuted }]}>
+            Log your {getMealTypeLabel(mealType).toLowerCase()}
+          </Text>
+          <Ionicons name="add-circle-outline" size={16} color={colors.primary} />
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -154,10 +160,17 @@ const styles = StyleSheet.create({
     padding: 4,
     marginLeft: 4,
   },
+  emptyContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    gap: 6,
+  },
   emptyText: {
     ...typography.caption,
-    textAlign: 'center',
-    marginTop: spacing.sm,
     fontStyle: 'italic',
   },
 });

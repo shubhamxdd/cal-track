@@ -17,7 +17,7 @@ import { RouteProp } from '@react-navigation/native';
 import { colors, spacing, borderRadius, typography, shadows, getThemeColors } from '../theme';
 import { useApp } from '../context/AppContext';
 import { getNutritionFromGemini } from '../api/gemini';
-import { GeminiNutritionResponse, MealType, FavoriteFood } from '../types';
+import { GeminiNutritionResponse, MealType, FavoriteFood, RecentFood } from '../types';
 import { generateId, getMealTypeLabel, getMealTypeEmoji } from '../utils/helpers';
 
 interface Props {
@@ -28,7 +28,7 @@ interface Props {
 type LogState = 'idle' | 'loading' | 'result';
 
 export const LogFoodScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { state, logFood, saveFavoriteFood, favorites } = useApp() as any;
+  const { state, logFood, saveFavoriteFood } = useApp();
   const theme = getThemeColors(state.settings.themeMode);
   const initialMealType: MealType = (route.params as any)?.mealType ?? 'lunch';
 
@@ -74,7 +74,6 @@ export const LogFoodScreen: React.FC<Props> = ({ navigation, route }) => {
       proteinG: parseFloat(editProtein) || nutritionResult.proteinG,
       carbsG: parseFloat(editCarbs) || nutritionResult.carbsG,
       fatG: parseFloat(editFat) || nutritionResult.fatG,
-      mealType,
     };
     await logFood(food, mealType);
     if (saveAsFav) {
@@ -83,15 +82,14 @@ export const LogFoodScreen: React.FC<Props> = ({ navigation, route }) => {
     navigation.goBack();
   };
 
-  const handleUseFavorite = async (fav: FavoriteFood) => {
+  const handleQuickAdd = async (item: FavoriteFood | RecentFood) => {
     const food = {
-      name: fav.name,
-      portionDescription: fav.portionDescription,
-      calories: fav.calories,
-      proteinG: fav.proteinG,
-      carbsG: fav.carbsG,
-      fatG: fav.fatG,
-      mealType,
+      name: item.name,
+      portionDescription: item.portionDescription,
+      calories: item.calories,
+      proteinG: item.proteinG,
+      carbsG: item.carbsG,
+      fatG: item.fatG,
     };
     await logFood(food, mealType);
     navigation.goBack();
@@ -247,29 +245,58 @@ export const LogFoodScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
           )}
 
-          {/* Favorites */}
-          {logState === 'idle' && state.favorites.length > 0 && (
+          {/* Quick Add Sections */}
+          {logState === 'idle' && (
             <>
-              <Text style={[styles.sectionLabel, { color: theme.textSecondary, marginTop: spacing.lg }]}>
-                ❤️ Favorites
-              </Text>
-              {state.favorites.slice(0, 5).map((fav: FavoriteFood) => (
-                <TouchableOpacity
-                  key={fav.id}
-                  onPress={() => handleUseFavorite(fav)}
-                  style={[styles.favCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.favCardName, { color: theme.text }]}>{fav.name}</Text>
-                    <Text style={[styles.favCardPortion, { color: theme.textMuted }]}>
-                      {fav.portionDescription}
-                    </Text>
-                  </View>
-                  <Text style={[styles.favCardCal, { color: colors.primary }]}>
-                    {Math.round(fav.calories)} kcal
+              {state.favorites.length > 0 && (
+                <>
+                  <Text style={[styles.sectionLabel, { color: theme.textSecondary, marginTop: spacing.lg }]}>
+                    ❤️ Favorites
                   </Text>
-                </TouchableOpacity>
-              ))}
+                  {state.favorites.slice(0, 5).map((fav) => (
+                    <TouchableOpacity
+                      key={fav.id}
+                      onPress={() => handleQuickAdd(fav)}
+                      style={[styles.quickAddCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quickAddName, { color: theme.text }]}>{fav.name}</Text>
+                        <Text style={[styles.quickAddPortion, { color: theme.textMuted }]}>
+                          {fav.portionDescription}
+                        </Text>
+                      </View>
+                      <Text style={[styles.quickAddCal, { color: colors.primary }]}>
+                        {Math.round(fav.calories)} kcal
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
+
+              {state.recentFoods.length > 0 && (
+                <>
+                  <Text style={[styles.sectionLabel, { color: theme.textSecondary, marginTop: spacing.lg }]}>
+                    🕐 Recent
+                  </Text>
+                  {state.recentFoods.slice(0, 10).map((recent) => (
+                    <TouchableOpacity
+                      key={recent.id}
+                      onPress={() => handleQuickAdd(recent)}
+                      style={[styles.quickAddCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.quickAddName, { color: theme.text }]}>{recent.name}</Text>
+                        <Text style={[styles.quickAddPortion, { color: theme.textMuted }]}>
+                          {recent.portionDescription}
+                        </Text>
+                      </View>
+                      <Text style={[styles.quickAddCal, { color: colors.primary }]}>
+                        {Math.round(recent.calories)} kcal
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
             </>
           )}
 
@@ -360,7 +387,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   logBtnText: { color: '#fff', ...typography.h4, fontWeight: '700' },
-  favCard: {
+  quickAddCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
@@ -368,7 +395,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: spacing.sm,
   },
-  favCardName: { ...typography.body, fontWeight: '500' },
-  favCardPortion: { ...typography.caption, marginTop: 2 },
-  favCardCal: { ...typography.body, fontWeight: '700' },
+  quickAddName: { ...typography.body, fontWeight: '500' },
+  quickAddPortion: { ...typography.caption, marginTop: 2 },
+  quickAddCal: { ...typography.body, fontWeight: '700' },
 });
